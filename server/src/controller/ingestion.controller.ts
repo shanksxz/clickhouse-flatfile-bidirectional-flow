@@ -1,14 +1,11 @@
 import { Request, Response } from "express";
 import { clickhouseService } from "../services/click-house";
-import {
-    ClickHouseConnection,
-    DataTransferConfig,
-} from "../types";
+import { ClickHouseConnection, DataTransferConfig } from "../types";
 import {
     clickhouseConnectionSchema,
-    type DataTransferConfig as ZodDataTransferConfig
-} from '../validators'
-import { z } from 'zod'
+    type DataTransferConfig as ZodDataTransferConfig,
+} from "../validators";
+import { z } from "zod";
 
 export class IngestionController {
     async validateConnection(
@@ -98,7 +95,10 @@ export class IngestionController {
     }
 
     //TODOL fix
-    async startTransfer(req: Request<{}, {}, DataTransferConfig>, res: Response) {
+    async startTransfer(
+        req: Request<{}, {}, DataTransferConfig>,
+        res: Response
+    ) {
         try {
             const config = req.body;
             const status = await clickhouseService.startTransfer(config);
@@ -129,22 +129,24 @@ export class IngestionController {
         try {
             const config = req.body;
             const stream = await clickhouseService.exportToFlatFile(config);
+
+            if (
+                config.source.type !== "clickhouse" ||
+                config.target.type !== "flatfile"
+            ) {
+                throw new Error("Invalid transfer configuration");
+            }
+
+            if (!config.source.columns || config.source.columns.length === 0) {
+                throw new Error("No columns to export");
+            }
             res.setHeader("Content-Type", "text/csv");
             res.setHeader(
                 "Content-Disposition",
-                `attachment; filename="${config.target.table}_${Date.now()}.csv"`
+                `attachment; filename="${config.source.table}_export.csv"`
             );
+
             stream.pipe(res);
-            stream.on("end", () => {
-                console.log("end");
-                res.end();
-            });
-            stream.on("error", (error) => {
-                console.error("error", error);
-                res.status(500).json({
-                    error: error instanceof Error ? error.message : "Unknown error",
-                });
-            });
         } catch (error) {
             res.status(500).json({
                 error: error instanceof Error ? error.message : "Unknown error",
@@ -154,4 +156,3 @@ export class IngestionController {
 }
 
 export const ingestionController = new IngestionController();
-

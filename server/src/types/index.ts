@@ -43,6 +43,7 @@ export type DataTransferConfig = {
         config: ClickHouseConnection
         table: string
         columns: string[]
+        // selectedColumns: string[]
     } | {
         type: 'flatfile'
         data: Record<string, string>[]
