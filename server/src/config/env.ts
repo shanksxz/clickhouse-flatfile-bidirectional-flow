@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
 const envSchema = z.object({
-	PORT: z.number().default(8787),
+	PORT: z.string().default("8787"),
 	CLICKHOUSE_USER: z.string().default("default"),
 	CLICKHOUSE_PASSWORD: z.string().default(""),
 	CLICKHOUSE_HOST: z.string().default("localhost"),
